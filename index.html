@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:          #0a1420;
+    --bg-grad:     #0d1b2e;
+    --surface:     #101f33;
+    --surface-2:   #16283f;
+    --border:      #24405f;
+    --border-soft: #1c3350;
+    --text:        #eef3f8;
+    --text-soft:   #93a7bd;
+    --text-faint:  #5f7590;
+    --gold:        #c9a45c;
+    --gold-soft:   #e0c88a;
+    --teal:        #5fb8a3;
+    --rose:        #d97a7a;
+    --blue-accent: #5b9bd9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(900px 460px at 12% -8%, rgba(91,155,217,0.10), transparent 60%),
+      radial-gradient(700px 420px at 100% 0%, rgba(201,164,92,0.06), transparent 55%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-grad) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    line-height:1.5;
+    padding:36px 18px 90px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+  ::selection{background:var(--gold);color:#0a1420;}
+
+  /* ---------- Header ---------- */
+  .titleblock{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+    padding-bottom:18px;
+    margin-bottom:26px;
+    border-bottom:1px solid var(--border-soft);
+    position:relative;
+  }
+  .titleblock::after{
+    content:"";
+    position:absolute;left:0;bottom:-1px;
+    width:120px;height:2px;
+    background:linear-gradient(90deg, var(--gold), transparent);
+  }
+  .titleblock .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.7rem;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  .titleblock h1{
+    font-family:'Spectral',Georgia,serif;
+    font-weight:700;
+    font-size:2.4rem;
+    margin:0;
+    color:var(--text);
+    letter-spacing:-0.01em;
+  }
+  .titleblock .sub{
+    color:var(--text-soft);
+    font-size:0.95rem;
+    margin-top:6px;
+    max-width:48ch;
+  }
+  .stamp-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:1px;
+    color:var(--gold-soft);
+    border:1px solid var(--border);
+    padding:7px 12px;
+    border-radius:4px;
+    white-space:nowrap;
+    background:rgba(201,164,92,0.06);
+  }
+
+  /* ---------- Subject type selector ---------- */
+  .subject-select{
+    margin-bottom:18px;
+  }
+  .subject-select .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.68rem;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:9px;
+  }
+  .subject-pills{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .subject-pills.two-col{grid-template-columns:repeat(2,1fr);}
+  .level-panel{display:none;}
+  .level-panel.active{display:block;}
+  .subject-pill{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:13px 14px;
+    cursor:pointer;
+    text-align:left;
+    transition:border-color .15s, background .15s, transform .1s;
+    color:var(--text-soft);
+  }
+  .subject-pill:hover{border-color:var(--blue-accent);}
+  .subject-pill .name{
+    font-family:'Spectral',Georgia,serif;
+    font-weight:600;
+    font-size:1.02rem;
+    color:var(--text);
+    display:block;
+    margin-bottom:3px;
+  }
+  .subject-pill .weights{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    color:var(--text-faint);
+  }
+  .subject-pill.active{
+    border-color:var(--gold);
+    background:linear-gradient(160deg, rgba(201,164,92,0.12), rgba(201,164,92,0.03));
+  }
+  .subject-pill.active .name{color:var(--gold-soft);}
+  .subject-pill.active .weights{color:var(--gold);}
+
+  /* ---------- Weight strip ---------- */
+  .weights-row{
+    display:flex;
+    align-items:center;
+    gap:0;
+    margin-bottom:30px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .weight-chip{
+    flex:1;
+    padding:13px 16px;
+    text-align:center;
+    border-right:1px solid var(--border);
+    position:relative;
+  }
+  .weight-chip:last-child{border-right:none;}
+  .weight-chip label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.64rem;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:5px;
+  }
+  .weight-chip .locked-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:1.15rem;
+    font-weight:600;
+    color:var(--gold-soft);
+  }
+  .weights-row-locked{position:relative;}
+
+  /* ---------- Exams sub-weight strip (locked) ---------- */
+  .sub-weights{
+    display:flex;
+    gap:0;
+    border-bottom:1px solid var(--border-soft);
+    background:rgba(91,155,217,0.03);
+  }
+  .sub-weight-field{
+    flex:1;
+    padding:9px 14px;
+    text-align:center;
+    border-right:1px solid var(--border-soft);
+  }
+  .sub-weight-field:last-child{border-right:none;}
+  .sub-weight-field label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.6rem;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:3px;
+  }
+  .sub-weights-locked .locked-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.95rem;
+    font-weight:600;
+    color:var(--gold-soft);
+  }
+  .sub-weight-note{
+    text-align:center;
+    font-size:0.68rem;
+    color:var(--text-faint);
+    font-family:'IBM Plex Mono',monospace;
+    padding:6px 12px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .sub-weight-note::before{content:"🔒 ";}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:26px;
+    align-items:start;
+  }
+
+  /* ---------- Component card ---------- */
+  .component{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    margin-bottom:18px;
+  }
+  .component-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:15px 18px 12px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .component-head .name{
+    font-family:'Spectral',Georgia,serif;
+    font-size:1.12rem;
+    font-weight:600;
+    color:var(--text);
+  }
+  .component-head .name small{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.63rem;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    font-weight:400;
+    margin-top:3px;
+  }
+  .component-head .ps-out{text-align:right;}
+  .component-head .ps-out .big{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:1.35rem;
+    font-weight:600;
+    color:var(--gold-soft);
+  }
+  .component-head .ps-out .lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.6rem;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+
+  .items{padding:4px 18px 2px;}
+  .item-row{
+    display:grid;
+    grid-template-columns:64px 1fr 14px 1fr 24px;
+    gap:8px;
+    align-items:center;
+    padding:9px 0;
+    border-bottom:1px dotted var(--border-soft);
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-row .item-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.75rem;
+    color:var(--text-faint);
+  }
+  .item-row input[type=number]{
+    width:100%;
+    padding:5px 4px 6px;
+    border:none;
+    border-bottom:1.5px solid var(--border);
+    background:transparent;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.92rem;
+    color:var(--text);
+    text-align:center;
+    transition:border-color .15s;
+  }
+  .item-row input[type=number]:focus{outline:none;border-color:var(--blue-accent);}
+  .item-row input[type=number]::placeholder{color:var(--text-faint);}
+  .item-row .slash{text-align:center;color:var(--text-faint);font-size:0.9rem;}
+  .item-row .rm{
+    background:none;
+    border:none;
+    color:var(--text-faint);
+    cursor:pointer;
+    font-size:1.05rem;
+    line-height:1;
+    padding:2px;
+  }
+  .item-row .rm:hover{color:var(--rose);}
+
+  .add-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 18px 15px;
+  }
+  .add-btn{
+    background:none;
+    border:1px dashed var(--border);
+    color:var(--blue-accent);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.75rem;
+    padding:6px 12px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .add-btn:hover{border-color:var(--blue-accent);background:rgba(91,155,217,0.06);}
+  .totals-mini{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.75rem;
+    color:var(--text-faint);
+  }
+
+  /* ---------- Result panel ---------- */
+  .result-col{position:sticky;top:24px;}
+  .result{
+    border-radius:10px;
+    background:
+      radial-gradient(420px 220px at 100% 0%, rgba(201,164,92,0.08), transparent 60%),
+      linear-gradient(160deg, var(--surface-2) 0%, #0c1a2b 100%);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:26px 24px 22px;
+  }
+  .result .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.66rem;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:16px;
+    text-align:center;
+  }
+
+  .stamp{
+    width:150px;height:150px;
+    margin:0 auto 10px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .stamp svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .stamp .stamp-core{position:relative;text-align:center;}
+  .stamp .num{
+    font-family:'Spectral',Georgia,serif;
+    font-size:2.6rem;
+    font-weight:700;
+    color:var(--text);
+    line-height:1;
+  }
+  .stamp .lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.58rem;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-top:2px;
+  }
+
+  .descriptor-row{text-align:center;margin-bottom:18px;}
+  .descriptor{
+    display:inline-block;
+    padding:5px 15px;
+    border-radius:3px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    font-weight:600;
+    border:1px solid currentColor;
+  }
+  .d-advancing{color:#7fd99a;}
+  .d-benchmarking{color:#7fc0e0;}
+  .d-connecting{color:var(--gold-soft);}
+  .d-developing{color:#e0a06a;}
+  .d-emerging{color:var(--rose);}
+
+  .receipt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.82rem;
+    color:var(--text-soft);
+    padding-top:14px;
+    border-top:1px dashed var(--border);
+  }
+  .receipt .line{display:flex;justify-content:space-between;gap:8px;padding:3px 0;}
+  .receipt .line .l{color:var(--text-faint);}
+  .receipt .line .v{color:var(--text);font-weight:500;white-space:nowrap;}
+  .receipt .final{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid var(--border);
+    font-weight:600;
+  }
+  .receipt .final .v{color:var(--gold-soft);}
+
+  /* ---------- Suggestions ---------- */
+  .suggestions{
+    margin-top:18px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:4px solid var(--blue-accent);
+    border-radius:6px;
+    padding:16px 18px;
+  }
+  .suggestions h3{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.68rem;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+    color:var(--blue-accent);
+    margin:0 0 10px;
+  }
+  .suggestions ul{margin:0;padding:0;list-style:none;}
+  .suggestions li{
+    margin-bottom:10px;
+    font-size:0.92rem;
+    color:var(--text-soft);
+    padding-left:16px;
+    position:relative;
+  }
+  .suggestions li:last-child{margin-bottom:0;}
+  .suggestions li::before{
+    content:"—";
+    position:absolute;left:0;top:0;
+    color:var(--blue-accent);
+  }
+  .suggestions li b{color:var(--text);}
+
+  /* ---------- Settings ---------- */
+  details.settings{
+    margin-top:22px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:0 18px;
+  }
+  details.settings summary{
+    cursor:pointer;
+    padding:13px 0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.76rem;
+    letter-spacing:0.5px;
+    color:var(--text-soft);
+    list-style:none;
+  }
+  details.settings summary::-webkit-details-marker{display:none;}
+  details.settings summary::before{content:"▸ ";color:var(--gold);}
+  details.settings[open] summary::before{content:"▾ ";}
+  .settings-body{padding:2px 0 18px;font-size:0.87rem;}
+  .settings-body p{color:var(--text-soft);margin-top:0;line-height:1.65;}
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .toggle-row label{font-family:'IBM Plex Mono',monospace;font-size:0.76rem;color:var(--text-soft);}
+  .toggle-row select{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.82rem;
+    padding:7px 9px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    background:var(--surface-2);
+    color:var(--text);
+  }
+
+  footer.note{
+    max-width:1040px;margin:30px auto 0;
+    font-size:0.8rem;color:var(--text-faint);
+    text-align:center;
+    font-family:'IBM Plex Sans',sans-serif;
+    padding-top:18px;
+    border-top:1px solid var(--border-soft);
+  }
+  footer.note .credit{
+    display:block;
+    margin-top:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:0.5px;
+    color:var(--gold);
+  }
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    .result-col{position:static;}
+  }
+  @media (max-width:560px){
+    .item-row{grid-template-columns:48px 1fr 10px 1fr 20px;}
+    .weights-row{flex-direction:column;}
+    .weight-chip{border-right:none;border-bottom:1px solid var(--border);}
+    .weight-chip:last-child{border-bottom:none;}
+    .titleblock h1{font-size:1.85rem;}
+    .subject-pills{grid-template-columns:1fr;}
+    .subject-pills.two-col{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titleblock">
+    <div>
+      <div class="eyebrow">Written Works &middot; Performance Tasks &middot; Exams</div>
+      <h1>Grade Tracker</h1>
+      <div class="sub">Enter each score and its total items — up to 5 Written/Oral Works and 3 Performance Tasks. The term grade recomputes as you type.</div>
+    </div>
+    <div class="stamp-tag">DepEd &middot; SY 2026–2027</div>
+  </div>
+
+  <div class="subject-select">
+    <div class="label">School Level</div>
+    <div class="subject-pills two-col" id="level-pills">
+      <button class="subject-pill" data-level="jhs">
+        <span class="name">Junior High School</span>
+        <span class="weights">Grades 7&ndash;10</span>
+      </button>
+      <button class="subject-pill" data-level="shs">
+        <span class="name">Senior High School</span>
+        <span class="weights">Grades 11&ndash;12</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="subject-select level-panel" id="jhs-select">
+    <div class="label">Learning Area</div>
+    <div class="subject-pills two-col" id="jhs-pills">
+      <button class="subject-pill" data-jhs="groupA">
+        <span class="name">AP, English, Filipino, Math, Science, GMRC/Values Ed</span>
+        <span class="weights">WW 20% &middot; PT 50% &middot; STs&ndash;TE 30%</span>
+      </button>
+      <button class="subject-pill" data-jhs="groupB">
+        <span class="name">EPP/TLE, MAPEH</span>
+        <span class="weights">WW 20% &middot; PT 60% &middot; STs&ndash;TE 20%</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="subject-select level-panel" id="shs-select">
+    <div class="label">Subject Type</div>
+    <div class="subject-pills" id="subject-pills">
+      <button class="subject-pill" data-subject="core">
+        <span class="name">Core Subject</span>
+        <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+      </button>
+      <button class="subject-pill" data-subject="applied">
+        <span class="name">Applied Subject</span>
+        <span class="weights">WW 35% &middot; PT 40% &middot; Exam 25%</span>
+      </button>
+      <button class="subject-pill" data-subject="elective">
+        <span class="name">Elective Subject</span>
+        <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="weights-row weights-row-locked">
+    <div class="weight-chip">
+      <label>Written Works</label>
+      <div class="locked-value" id="w-ww">20%</div>
+    </div>
+    <div class="weight-chip">
+      <label>Performance Tasks</label>
+      <div class="locked-value" id="w-pt">50%</div>
+    </div>
+    <div class="weight-chip">
+      <label>Exams</label>
+      <div class="locked-value" id="w-ex">30%</div>
+    </div>
+  </div>
+  <div class="sub-weight-note" style="margin:-20px 0 26px;border-bottom:none;">Locked once School Level / Learning Area / Subject Type is selected above</div>
+
+  <div class="layout">
+    <div class="components-col">
+      <div id="components"></div>
+
+      <details class="settings">
+        <summary>Transmutation table &amp; options</summary>
+        <div class="settings-body">
+          <p>
+            Starting SY 2026&ndash;2027, DepEd Order No. 15, s. 2026 uses an <b>Adjusted Transmutation Table</b>
+            where an Initial Grade of 70.00 converts to a passing 75 (previously 60&nbsp;&rarr;&nbsp;75).
+            The band edges below were recalibrated directly against 36 real Initial Grade &rarr; Term Grade
+            pairs found in the shared class record, since a secondary web source used earlier produced a
+            couple of mismatches (e.g. 74.50 was showing 78 instead of the correct 76). Every band now has
+            at least one confirmed match from that sheet. Bands with no example in the sheet &mdash; mostly
+            Initial Grades below ~60, where few or no students scored &mdash; are interpolated and are the
+            least certain part of this table. If you spot another mismatch against your official copy, share
+            the Initial Grade and Term Grade shown and this can be tightened further.
+          </p>
+          <div class="toggle-row">
+            <label>Table:</label>
+            <select id="table-mode">
+              <option value="adjusted2026" selected>Adjusted table (SY 2026&ndash;2027, DO 15 s. 2026)</option>
+              <option value="old2015">Previous table (DO 8, s. 2015 &mdash; 60&nbsp;&rarr;&nbsp;75)</option>
+              <option value="none">No transmutation &mdash; use Initial Grade as-is</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="result-col">
+      <div class="result" id="result">
+        <div class="eyebrow">Term Grade</div>
+        <div class="stamp">
+          <svg viewBox="0 0 150 150" fill="none">
+            <ellipse cx="75" cy="75" rx="68" ry="64" stroke="#c9a45c" stroke-width="3" transform="rotate(-4 75 75)"/>
+            <ellipse cx="75" cy="75" rx="61" ry="58" stroke="#c9a45c" stroke-width="1.2" opacity="0.6" transform="rotate(-4 75 75)"/>
+          </svg>
+          <div class="stamp-core">
+            <div class="num" id="tg-num">&mdash;</div>
+            <div class="lbl">Transmuted</div>
+          </div>
+        </div>
+        <div class="descriptor-row">
+          <span class="descriptor" id="descriptor-pill">&mdash;</span>
+        </div>
+        <div class="receipt" id="breakdown"></div>
+      </div>
+
+      <div class="suggestions">
+        <h3>How to raise this grade</h3>
+        <ul id="suggestion-list"></ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="note">
+  Built around DepEd's Grading System Weight by Subject — weights lock automatically once School Level, Learning Area, or Subject Type is selected above.
+  <span class="credit">Developed by Glenn RJ A. Señara</span>
+</footer>
+
+<script>
+// DepEd memo: at most 5 Written/Oral Works and 3 Performance Tasks per term.
+const WW_COUNT = 5;
+const PT_COUNT = 3;
+
+const state = {
+  ww: Array.from({length: WW_COUNT}, () => ({score:'', total:''})),
+  pt: Array.from({length: PT_COUNT}, () => ({score:'', total:''})),
+  ex: {
+    st1: {score:'', total:''},
+    st2: {score:'', total:''},
+    te:  {score:'', total:''},
+  },
+};
+
+// Within the Exams component, each sub-test is weighted on its OWN percentage
+// score (not pooled by raw points) — per class record instructions: Summative
+// Test 1 and Summative Test 2 are each 30% of the Exams grade, and the Term
+// Exam is 40%. Fixed for all subject types.
+const examSubWeights = {st1: 30, st2: 30, te: 40};
+const examSubMeta = {
+  st1: {label:'ST1', full:'Summative Test 1'},
+  st2: {label:'ST2', full:'Summative Test 2'},
+  te:  {label:'TE',  full:'Term Exam'},
+};
+
+const componentMeta = {
+  ww: {key:'ww', title:'Written Works', sub:'Quizzes, seatwork, oral recitation — up to 5'},
+  pt: {key:'pt', title:'Performance Tasks', sub:'Projects, activities, outputs — up to 3'},
+  ex: {key:'ex', title:'Exams', sub:'Summative Test 1 (30%) + Summative Test 2 (30%) + Term Exam (40%)'},
+};
+
+// DepEd Grading System Weight by Subject (K to 12 grading guidelines).
+// JHS weights are fixed by learning area; SHS weights are fixed by subject type.
+const JHS_PRESETS = {
+  groupA: {ww:20, pt:50, ex:30},
+  groupB: {ww:20, pt:60, ex:20},
+};
+const SHS_PRESETS = {
+  core:     {ww:20, pt:50, ex:30},
+  applied:  {ww:35, pt:40, ex:25},
+  elective: {ww:20, pt:50, ex:30},
+};
+
+let currentLevel = 'shs';       // 'jhs' | 'shs'
+let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
+let currentShsType = 'core';    // 'core' | 'applied' | 'elective'
+
+// Adjusted table, SY 2026-2027 (DepEd Order 15, s. 2026) — IG 70.00 -> TG 75
+// Recalibrated against the 36 real (Initial Grade -> Term Grade) pairs found in the
+// user's own class record, since the initially-sourced version (from a secondary
+// blog write-up of the DO 15 s. 2026 annex) did not reproduce several of those rows
+// correctly. Every band below has at least one confirmed example from the actual
+// sheet; bands with no example in the sheet (mostly below IG 60, where few or no
+// students scored) are interpolated and are the least certain part of this table.
+const TABLE_ADJUSTED_2026 = [
+  [99.50,100.00,100],[98.32,99.49,99],[97.14,98.31,98],[95.96,97.13,97],
+  [94.78,95.95,96],[93.60,94.77,95],[92.42,93.59,94],[91.24,92.41,93],
+  [90.06,91.23,92],[88.88,90.05,91],[87.70,88.87,90],[86.52,87.69,89],
+  [85.34,86.51,88],[84.90,85.33,87],[82.98,84.89,86],[82.24,82.97,85],
+  [81.50,82.23,84],[80.63,81.49,83],[80.16,80.62,82],[79.16,80.15,81],
+  [77.96,79.15,80],[76.75,77.95,79],[75.92,76.74,78],[74.84,75.91,77],
+  [72.04,74.83,76],[70.00,72.03,75],[68.00,69.99,74],[66.00,67.99,73],
+  [63.40,65.99,72],[61.70,63.39,71],[59.50,61.69,70],[57.55,59.49,69],
+  [55.60,57.54,68],[53.65,55.59,67],[51.70,53.64,66],[49.75,51.69,65],
+  [47.80,49.74,64],[34.50,47.79,63],[23.00,34.49,62],[11.50,22.99,61],
+  [0.00,11.49,60],
+];
+
+const TABLE_OLD_2015 = [
+  [100,100,100],[98.40,99.99,99],[96.80,98.39,98],[95.20,96.79,97],
+  [93.60,95.19,96],[92.00,93.59,95],[90.40,91.99,94],[88.80,90.39,93],
+  [87.20,88.79,92],[85.60,87.19,91],[84.00,85.59,90],[82.40,83.99,89],
+  [80.80,82.39,88],[79.20,80.79,87],[77.60,79.19,86],[76.00,77.59,85],
+  [74.40,75.99,84],[72.80,74.39,83],[71.20,72.79,82],[69.60,71.19,81],
+  [68.00,69.59,80],[66.40,67.99,79],[64.80,66.39,78],[63.20,64.79,77],
+  [61.60,63.19,76],[60.00,61.59,75],[56.00,59.99,74],[52.00,55.99,73],
+  [48.00,51.99,72],[44.00,47.99,71],[40.00,43.99,70],[36.00,39.99,69],
+  [32.00,35.99,68],[28.00,31.99,67],[24.00,27.99,66],[20.00,23.99,65],
+  [16.00,19.99,64],[12.00,15.99,63],[8.00,11.99,62],[4.00,7.99,61],
+  [0,3.99,60],
+];
+
+function transmute(ig, mode){
+  if(mode === 'none') return Math.round(ig*100)/100;
+  const table = mode === 'old2015' ? TABLE_OLD_2015 : TABLE_ADJUSTED_2026;
+  for(const [lo,hi,tg] of table){
+    if(ig >= lo && ig <= hi) return tg;
+  }
+  if(ig > 100) return 100;
+  return 60;
+}
+
+function descriptorFor(tg){
+  if(tg >= 90) return {label:'Advancing', cls:'d-advancing'};
+  if(tg >= 80) return {label:'Benchmarking', cls:'d-benchmarking'};
+  if(tg >= 75) return {label:'Connecting', cls:'d-connecting'};
+  if(tg >= 70) return {label:'Developing', cls:'d-developing'};
+  return {label:'Emerging', cls:'d-emerging'};
+}
+
+const componentsEl = document.getElementById('components');
+
+// Builds the score-entry DOM from scratch. Only call this when rows are added or
+// removed (a structural change) — NOT on every keystroke. Rebuilding the inputs on
+// every keystroke would destroy and recreate the focused <input>, which is why
+// typing used to only accept one character at a time.
+function buildComponents(){
+  componentsEl.innerHTML = '';
+  ['ww','pt','ex'].forEach(key=>{
+    const meta = componentMeta[key];
+    const card = document.createElement('div');
+    card.className = 'component';
+    card.dataset.key = key;
+
+    if(key === 'ex'){
+      card.innerHTML = `
+        <div class="component-head">
+          <div class="name">${meta.title}<small>${meta.sub}</small></div>
+          <div class="ps-out">
+            <div class="big" data-out="ps">0.00<span style="font-size:0.85rem;">%</span></div>
+            <div class="lbl">Percentage Score</div>
+          </div>
+        </div>
+        <div class="sub-weights sub-weights-locked">
+          <div class="sub-weight-field">
+            <label>ST1 weight</label>
+            <div class="locked-value">${examSubWeights.st1}%</div>
+          </div>
+          <div class="sub-weight-field">
+            <label>ST2 weight</label>
+            <div class="locked-value">${examSubWeights.st2}%</div>
+          </div>
+          <div class="sub-weight-field">
+            <label>TE weight</label>
+            <div class="locked-value">${examSubWeights.te}%</div>
+          </div>
+        </div>
+        <div class="sub-weight-note">Fixed per DepEd Order No. 15, s. 2026 — applies to all subject types</div>
+        <div class="items" data-key="ex"></div>
+        <div class="add-row">
+          <div class="totals-mini" data-out="totals">Enter each sub-test's raw score and total items</div>
+        </div>
+      `;
+      componentsEl.appendChild(card);
+
+      const itemsEl = card.querySelector('.items');
+      ['st1','st2','te'].forEach(sub=>{
+        const row = state.ex[sub];
+        const r = document.createElement('div');
+        r.className = 'item-row';
+        r.innerHTML = `
+          <div class="item-label" title="${examSubMeta[sub].full}">${examSubMeta[sub].label}</div>
+          <input type="number" inputmode="decimal" placeholder="score" data-exsub="${sub}" data-field="score" value="${row.score}">
+          <div class="slash">/</div>
+          <input type="number" inputmode="decimal" placeholder="items" data-exsub="${sub}" data-field="total" value="${row.total}">
+          <span style="width:24px;"></span>
+        `;
+        itemsEl.appendChild(r);
+      });
+
+      card.querySelectorAll('input[data-exsub]').forEach(inp=>{
+        inp.addEventListener('input', e=>{
+          const {exsub, field} = e.target.dataset;
+          state.ex[exsub][field] = e.target.value;
+          renderAll();
+        });
+      });
+      return;
+    }
+
+    const rows = state[key];
+    const itemPrefix = key === 'ww' ? 'WW' : 'PT';
+    card.innerHTML = `
+      <div class="component-head">
+        <div class="name">${meta.title}<small>${meta.sub}</small></div>
+        <div class="ps-out">
+          <div class="big" data-out="ps">0.00<span style="font-size:0.85rem;">%</span></div>
+          <div class="lbl">Percentage Score</div>
+        </div>
+      </div>
+      <div class="items" data-key="${key}"></div>
+      <div class="add-row">
+        <div class="totals-mini" data-out="totals" style="margin-left:auto;">Total: 0 / 0</div>
+      </div>
+    `;
+    componentsEl.appendChild(card);
+
+    const itemsEl = card.querySelector('.items');
+    rows.forEach((row, idx)=>{
+      const r = document.createElement('div');
+      r.className = 'item-row';
+      r.innerHTML = `
+        <div class="item-label">${itemPrefix}${idx+1}</div>
+        <input type="number" inputmode="decimal" placeholder="score" data-key="${key}" data-idx="${idx}" data-field="score" value="${row.score}">
+        <div class="slash">/</div>
+        <input type="number" inputmode="decimal" placeholder="items" data-key="${key}" data-idx="${idx}" data-field="total" value="${row.total}">
+        <span style="width:24px;"></span>
+      `;
+      itemsEl.appendChild(r);
+    });
+  });
+
+  componentsEl.querySelectorAll('input[data-key]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const {key, idx, field} = e.target.dataset;
+      state[key][idx][field] = e.target.value;
+      renderAll(); // computed values only — does not touch the inputs
+    });
+  });
+}
+
+// Updates only the computed numbers (Percentage Score, totals) inside the already-
+// built component cards. Safe to call on every keystroke.
+function updateComponentDisplays(){
+  ['ww','pt'].forEach(key=>{
+    const card = componentsEl.querySelector(`.component[data-key="${key}"]`);
+    if(!card) return;
+    const {ps, totalScore, totalItems} = computePS(key);
+    card.querySelector('[data-out="ps"]').innerHTML = `${isFinite(ps) ? ps.toFixed(2) : '0.00'}<span style="font-size:0.85rem;">%</span>`;
+    card.querySelector('[data-out="totals"]').textContent = `Total: ${totalScore} / ${totalItems || 0}`;
+  });
+
+  const exCard = componentsEl.querySelector(`.component[data-key="ex"]`);
+  if(exCard){
+    const {ps, parts} = computeExamPS();
+    exCard.querySelector('[data-out="ps"]').innerHTML = `${isFinite(ps) ? ps.toFixed(2) : '0.00'}<span style="font-size:0.85rem;">%</span>`;
+    const summary = parts.map(p => `${p.meta.label} ${isFinite(p.ps) ? p.ps.toFixed(1)+'%' : '—'}`).join(' · ');
+    exCard.querySelector('[data-out="totals"]').textContent = summary;
+  }
+}
+
+function computePS(key){
+  const rows = state[key];
+  let totalScore = 0, totalItems = 0;
+  rows.forEach(r=>{
+    const s = parseFloat(r.score);
+    const t = parseFloat(r.total);
+    // Skip rows that aren't fully filled in yet — a lone score with no total
+    // (or vice versa) shouldn't distort the percentage.
+    if(!isNaN(s) && !isNaN(t) && t > 0){
+      totalScore += s;
+      totalItems += t;
+    }
+  });
+  const ps = totalItems > 0 ? (totalScore/totalItems)*100 : NaN;
+  return {ps, totalScore, totalItems};
+}
+
+// Exams PS = weighted average of each sub-test's OWN percentage score (ST1 30%,
+// ST2 30%, TE 40% by default). If a sub-test hasn't been entered yet (e.g. Term
+// Exam not given), its weight is prorated across whichever sub-tests DO have
+// scores, so the grade still computes sensibly mid-term.
+function computeExamPS(){
+  const parts = ['st1','st2','te'].map(sub=>{
+    const row = state.ex[sub];
+    const s = parseFloat(row.score);
+    const t = parseFloat(row.total);
+    const ps = (!isNaN(s) && !isNaN(t) && t > 0) ? (s/t)*100 : NaN;
+    return {sub, ps, weight: examSubWeights[sub], meta: examSubMeta[sub]};
+  });
+
+  const available = parts.filter(p => isFinite(p.ps));
+  if(available.length === 0) return {ps: NaN, parts};
+
+  const weightSum = available.reduce((a,p)=>a+p.weight, 0);
+  const ps = weightSum > 0
+    ? available.reduce((a,p)=> a + p.ps * (p.weight/weightSum), 0)
+    : available.reduce((a,p)=> a + p.ps, 0) / available.length;
+
+  return {ps, parts};
+}
+
+function getWeights(){
+  const preset = currentLevel === 'jhs'
+    ? JHS_PRESETS[currentJhsGroup]
+    : SHS_PRESETS[currentShsType];
+  return {ww: preset.ww, pt: preset.pt, ex: preset.ex, sum: preset.ww + preset.pt + preset.ex};
+}
+
+// Updates the locked weight display and active pill states, then re-renders.
+function applyWeights(){
+  const w = getWeights();
+  document.getElementById('w-ww').textContent = w.ww + '%';
+  document.getElementById('w-pt').textContent = w.pt + '%';
+  document.getElementById('w-ex').textContent = w.ex + '%';
+
+  document.getElementById('jhs-select').classList.toggle('active', currentLevel === 'jhs');
+  document.getElementById('shs-select').classList.toggle('active', currentLevel === 'shs');
+  document.querySelectorAll('#level-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.level === currentLevel);
+  });
+  document.querySelectorAll('#jhs-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.jhs === currentJhsGroup);
+  });
+  document.querySelectorAll('#subject-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.subject === currentShsType);
+  });
+
+  renderAll();
+}
+
+document.querySelectorAll('#level-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentLevel = btn.dataset.level;
+    applyWeights();
+  });
+});
+document.querySelectorAll('#jhs-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentJhsGroup = btn.dataset.jhs;
+    applyWeights();
+  });
+});
+document.querySelectorAll('#subject-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentShsType = btn.dataset.subject;
+    applyWeights();
+  });
+});
+
+function renderAll(){
+  updateComponentDisplays();
+
+  const weights = getWeights();
+
+  const psWW = computePS('ww').ps;
+  const psPT = computePS('pt').ps;
+  const psEX = computeExamPS().ps;
+
+  const wsWW = isFinite(psWW) ? psWW * (weights.ww/100) : 0;
+  const wsPT = isFinite(psPT) ? psPT * (weights.pt/100) : 0;
+  const wsEX = isFinite(psEX) ? psEX * (weights.ex/100) : 0;
+
+  const anyData = isFinite(psWW) || isFinite(psPT) || isFinite(psEX);
+  const ig = wsWW + wsPT + wsEX;
+
+  const mode = document.getElementById('table-mode').value;
+  const tg = anyData ? transmute(ig, mode) : NaN;
+
+  document.getElementById('tg-num').textContent = anyData ? Math.round(tg) : '—';
+  const pill = document.getElementById('descriptor-pill');
+  if(anyData){
+    const d = descriptorFor(tg);
+    pill.textContent = d.label;
+    pill.className = 'descriptor ' + d.cls;
+  } else {
+    pill.textContent = 'Enter scores';
+    pill.className = 'descriptor';
+  }
+
+  document.getElementById('breakdown').innerHTML = anyData ? `
+    <div class="line"><span class="l">Written Works</span><span class="v">${isFinite(psWW)?psWW.toFixed(2):'0.00'}% &times; ${weights.ww}%</span></div>
+    <div class="line"><span class="l"></span><span class="v">= ${wsWW.toFixed(2)}</span></div>
+    <div class="line"><span class="l">Performance Tasks</span><span class="v">${isFinite(psPT)?psPT.toFixed(2):'0.00'}% &times; ${weights.pt}%</span></div>
+    <div class="line"><span class="l"></span><span class="v">= ${wsPT.toFixed(2)}</span></div>
+    <div class="line"><span class="l">Exams</span><span class="v">${isFinite(psEX)?psEX.toFixed(2):'0.00'}% &times; ${weights.ex}%</span></div>
+    <div class="line"><span class="l"></span><span class="v">= ${wsEX.toFixed(2)}</span></div>
+    <div class="final"><span class="l">Initial Grade</span><span class="v">${ig.toFixed(2)}</span></div>
+  ` : `<div style="color:var(--text-faint);">Fill in at least one score to see the computed grade.</div>`;
+
+  renderSuggestions(anyData, {psWW, psPT, psEX, wsWW, wsPT, wsEX, ig, tg, weights});
+}
+
+function renderSuggestions(anyData, d){
+  const list = document.getElementById('suggestion-list');
+  list.innerHTML = '';
+  if(!anyData){
+    list.innerHTML = '<li>Add scores on the left and tips will appear here.</li>';
+    return;
+  }
+
+  const tips = [];
+  const desc = descriptorFor(d.tg);
+
+  const comps = [
+    {name:'Written Works', ps:d.psWW, weight:d.weights.ww, key:'ww'},
+    {name:'Performance Tasks', ps:d.psPT, weight:d.weights.pt, key:'pt'},
+    {name:'Exams', ps:d.psEX, weight:d.weights.ex, key:'ex'},
+  ].filter(c=>isFinite(c.ps));
+
+  if(comps.length){
+    const weakest = comps.reduce((a,b)=> a.ps <= b.ps ? a : b);
+    const leverage = comps.map(c=>({...c, room:(100-c.ps)*(c.weight/100)}))
+                          .reduce((a,b)=> a.room >= b.room ? a : b);
+
+    tips.push(`Your <b>${leverage.name}</b> score has the most room to lift your grade — it's worth ${leverage.weight}% of the term and currently sits at ${leverage.ps.toFixed(1)}%. Even a small improvement here moves the needle most.`);
+
+    if(weakest.key !== leverage.key){
+      tips.push(`<b>${weakest.name}</b> is your lowest-scoring area at ${weakest.ps.toFixed(1)}%. Ask your teacher which specific items or competencies were missed so you can target practice there.`);
+    }
+  }
+
+  if(desc.label === 'Emerging'){
+    tips.push('You are below passing. Focus on completing every remaining Written Work and Performance Task — missed or ungraded items count as zero and pull the average down fast.');
+    tips.push('Talk to your teacher as soon as possible about remediation options and which upcoming tasks carry the most weight.');
+  } else if(desc.label === 'Developing'){
+    tips.push('You are close to passing but not there yet. Prioritize the component with the heaviest weight for this subject type, then review Exam topics you scored lowest on.');
+  } else if(desc.label === 'Connecting'){
+    tips.push('You are passing but only meeting the basics. Revisit rubrics for your highest-weighted component to see exactly what separates a "good" output from an excellent one.');
+  } else if(desc.label === 'Benchmarking'){
+    tips.push('You are performing at grade level. To push into the 90s, aim for near-perfect scores on upcoming tasks and review small errors on past exams.');
+  } else if(desc.label === 'Advancing'){
+    tips.push('You are exceeding expectations. Keep up consistent output quality, and consider helping peers review material — teaching others is one of the best ways to deepen mastery.');
+  }
+
+  list.innerHTML = tips.map(t=>`<li>${t}</li>`).join('');
+}
+
+document.getElementById('table-mode').addEventListener('change', renderAll);
+
+buildComponents();
+applyWeights();
+</script>
+</body>
+</html>
