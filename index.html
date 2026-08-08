@@ -770,7 +770,7 @@
       <div class="support-label">Scan to send via GCash</div>
     </div>
     <div class="support-option">
-      <a class="kofi-btn" href="https://ko-fi.com/imglennsen" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>
+      <a class="kofi-btn" href="https://ko-fi.com/imglennsen" target="_blank" rel="noopener noreferrer" onclick="trackEvent('tip_link_click', {method: 'kofi'})">☕ Support on Ko-fi</a>
       <div class="support-label">ko-fi.com/imglennsen</div>
     </div>
   </div>
@@ -828,6 +828,26 @@ const SHS_PRESETS = {
 let currentLevel = 'shs';       // 'jhs' | 'shs'
 let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
 let currentShsType = 'core';    // 'core' | 'applied' | 'elective'
+
+// ---------- Custom GA4 event tracking ----------
+// Base gtag snippet only sends automatic page_view / GA4 default events.
+// These custom events give visibility into how people actually use the
+// tracker (which subject config they pick, whether they complete a grade,
+// how they interact with the transmutation table, tip-jar clicks, etc.)
+function trackEvent(name, params = {}) {
+  if (typeof gtag === 'function') {
+    gtag('event', name, params);
+  }
+}
+
+let firstGradeTracked = false;   // fires once per session
+let gradeDebounceTimer = null;   // avoids firing an event on every keystroke
+function trackGradeComputed(payload) {
+  clearTimeout(gradeDebounceTimer);
+  gradeDebounceTimer = setTimeout(() => {
+    trackEvent('grade_computed', payload);
+  }, 1200); // waits until the user pauses typing for ~1.2s
+}
 
 // Adjusted table, SY 2026-2027 (DepEd Order 15, s. 2026) — IG 70.00 -> TG 75
 // Recalibrated against the 36 real (Initial Grade -> Term Grade) pairs found in the
@@ -1086,18 +1106,21 @@ function applyWeights(){
 document.querySelectorAll('#level-pills .subject-pill').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     currentLevel = btn.dataset.level;
+    trackEvent('select_school_level', {level: currentLevel});
     applyWeights();
   });
 });
 document.querySelectorAll('#jhs-pills .subject-pill').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     currentJhsGroup = btn.dataset.jhs;
+    trackEvent('select_jhs_group', {jhs_group: currentJhsGroup});
     applyWeights();
   });
 });
 document.querySelectorAll('#subject-pills .subject-pill').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     currentShsType = btn.dataset.subject;
+    trackEvent('select_subject_type', {subject_type: currentShsType});
     applyWeights();
   });
 });
@@ -1143,6 +1166,23 @@ function renderAll(){
   ` : `<div style="color:var(--text-faint);">Fill in at least one score to see the computed grade.</div>`;
 
   renderSuggestions(anyData, {psWW, psPT, psEX, wsWW, wsPT, wsEX, ig, tg, weights});
+
+  if (anyData) {
+    if (!firstGradeTracked) {
+      firstGradeTracked = true;
+      trackEvent('first_grade_computed', {
+        level: currentLevel,
+        subject_config: currentLevel === 'jhs' ? currentJhsGroup : currentShsType,
+      });
+    }
+    trackGradeComputed({
+      term_grade: Math.round(tg),
+      descriptor: descriptorFor(tg).label,
+      level: currentLevel,
+      subject_config: currentLevel === 'jhs' ? currentJhsGroup : currentShsType,
+      table_mode: document.getElementById('table-mode').value,
+    });
+  }
 }
 
 function renderSuggestions(anyData, d){
@@ -1190,7 +1230,10 @@ function renderSuggestions(anyData, d){
   list.innerHTML = tips.map(t=>`<li>${t}</li>`).join('');
 }
 
-document.getElementById('table-mode').addEventListener('change', renderAll);
+document.getElementById('table-mode').addEventListener('change', (e)=>{
+  trackEvent('change_transmutation_table', {table_mode: e.target.value});
+  renderAll();
+});
 
 buildComponents();
 applyWeights();
