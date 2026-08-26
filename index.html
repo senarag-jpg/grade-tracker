@@ -620,6 +620,59 @@
     .subject-pills{grid-template-columns:1fr;}
     .subject-pills.two-col{grid-template-columns:1fr;}
   }
+.survey-banner{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: var(--surface-2, #16283f);
+  border-top: 1px solid var(--border, #24405f);
+  padding: 14px 18px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+}
+.survey-banner.visible{ display: flex; }
+.survey-banner-text{
+  color: var(--text, #eef3f8);
+  font-size: 14px;
+  max-width: 480px;
+}
+.survey-banner-actions{
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.survey-banner-btn{
+  background: var(--text, #eef3f8);
+  color: var(--bg, #0a1420);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.survey-banner-dismiss{
+  background: transparent;
+  color: var(--text-soft, #93a7bd);
+  border: 1px solid var(--border-soft, #1c3350);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+@media (max-width: 640px){
+  .survey-banner{ padding: 12px; }
+  .survey-banner-text{ font-size: 13px; }
+}
 </style>
 </head>
 <body>
@@ -779,6 +832,8 @@
 <footer class="note">
   Built around DepEd's Grading System Weight by Subject — weights lock automatically once School Level, Learning Area, or Subject Type is selected above.
   <span class="credit">Developed by Glenn RJ A. Señara</span>
+  <br>
+  <a id="educator-survey-link" href="#" target="_blank" rel="noopener noreferrer" style="color: var(--text-soft, #93a7bd); font-size: 12px; text-decoration: underline; opacity: 0.8;" onclick="trackEvent('educator_survey_link_clicked', {})">Are you an educator? Share your feedback →</a>
 </footer>
 
 <script>
@@ -848,6 +903,54 @@ function trackGradeComputed(payload) {
     trackEvent('grade_computed', payload);
   }, 1200); // waits until the user pauses typing for ~1.2s
 }
+
+// ---------- Student research survey banner ----------
+// TODO: replace this placeholder with your actual Google Form URL
+const SURVEY_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScwTMBIvfi0j9SXiM8xS85V5YVy50a1v5scC1BZq7eLyiwukw/viewform?usp=sharing';
+// TODO: replace this placeholder with your teacher survey's Google Form URL
+const EDUCATOR_SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe4ZfHST2SiRgtNA73Ea_ivod-YZ3oRsci6EwxHU-3ZaRExeQ/viewform';
+const SURVEY_STORAGE_KEY = 'gt_survey_prompted_v1'; // bump the _v1 suffix if you relaunch the study later
+
+function maybeShowSurveyBanner() {
+  try {
+    if (localStorage.getItem(SURVEY_STORAGE_KEY)) return; // already shown to this browser
+  } catch (e) {
+    // localStorage unavailable (e.g. private browsing) — fall back to showing every time
+  }
+  // small delay so the banner doesn't appear the instant the grade renders,
+  // giving the user a moment to actually see their result first
+  setTimeout(() => {
+    const banner = document.getElementById('survey-banner');
+    if (!banner) return;
+    banner.classList.add('visible');
+    trackEvent('survey_banner_shown', {});
+  }, 2500);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const link = document.getElementById('survey-banner-link');
+  const dismissBtn = document.getElementById('survey-banner-dismiss');
+  const banner = document.getElementById('survey-banner');
+  const educatorLink = document.getElementById('educator-survey-link');
+  if (educatorLink) {
+    educatorLink.href = EDUCATOR_SURVEY_URL;
+  }
+  if (link) {
+    link.href = SURVEY_FORM_URL;
+    link.addEventListener('click', () => {
+      trackEvent('survey_banner_clicked', {});
+      try { localStorage.setItem(SURVEY_STORAGE_KEY, 'clicked'); } catch (e) {}
+      banner.classList.remove('visible');
+    });
+  }
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      trackEvent('survey_banner_dismissed', {});
+      try { localStorage.setItem(SURVEY_STORAGE_KEY, 'dismissed'); } catch (e) {}
+      banner.classList.remove('visible');
+    });
+  }
+});
 
 // Adjusted table, SY 2026-2027 (DepEd Order 15, s. 2026) — IG 70.00 -> TG 75
 // Recalibrated against the 36 real (Initial Grade -> Term Grade) pairs found in the
@@ -1174,6 +1277,7 @@ function renderAll(){
         level: currentLevel,
         subject_config: currentLevel === 'jhs' ? currentJhsGroup : currentShsType,
       });
+      maybeShowSurveyBanner();
     }
     trackGradeComputed({
       term_grade: Math.round(tg),
@@ -1238,5 +1342,14 @@ document.getElementById('table-mode').addEventListener('change', (e)=>{
 buildComponents();
 applyWeights();
 </script>
+<div id="survey-banner" class="survey-banner">
+  <div class="survey-banner-text">
+    Help improve Grade Tracker — got 3 minutes to answer a short survey?
+  </div>
+  <div class="survey-banner-actions">
+    <a id="survey-banner-link" class="survey-banner-btn" href="#" target="_blank" rel="noopener noreferrer">Take the survey</a>
+    <button id="survey-banner-dismiss" class="survey-banner-dismiss" type="button">Not now</button>
+  </div>
+</div>
 </body>
 </html>
