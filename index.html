@@ -753,7 +753,7 @@
         <span class="weights">WW 35% &middot; PT 40% &middot; Exam 25%</span>
       </button>
       <button class="subject-pill" data-subject="elective">
-        <span class="name">Elective Subject</span>
+        <span class="name">Academic Elective Subject</span>
         <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
       </button>
       <button class="subject-pill" data-subject="academicSpecialized">
@@ -763,6 +763,10 @@
       <button class="subject-pill" data-subject="tvlSpecialized">
         <span class="name">TVL Specialized<span class="grade-tag">Grade 12 only</span></span>
         <span class="weights">WW 20% &middot; PT 60% &middot; Exam 20%</span>
+      </button>
+      <button class="subject-pill" data-subject="techProElective">
+        <span class="name">TechPro Electives</span>
+        <span class="weights">WW 15% &middot; PT 65% &middot; Exam 20%</span>
       </button>
     </div>
   </div>
@@ -907,11 +911,12 @@ const SHS_PRESETS = {
   elective:            {ww:20, pt:50, ex:30},
   academicSpecialized: {ww:25, pt:45, ex:30},
   tvlSpecialized:      {ww:20, pt:60, ex:20},
+  techProElective:     {ww:15, pt:65, ex:20},
 };
 
 let currentLevel = 'shs';       // 'jhs' | 'shs'
 let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
-let currentShsType = 'core';    // 'core' | 'applied' | 'elective' | 'academicSpecialized' | 'tvlSpecialized'
+let currentShsType = 'core';    // 'core' | 'applied' | 'elective' | 'academicSpecialized' | 'tvlSpecialized' | 'techProElective'
 
 // ---------- Custom GA4 event tracking ----------
 // Base gtag snippet only sends automatic page_view / GA4 default events.
