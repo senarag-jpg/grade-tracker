@@ -180,6 +180,25 @@
   }
   .subject-pill.active .name{color:var(--gold-soft);}
   .subject-pill.active .weights{color:var(--gold);}
+  .subject-pill .grade-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.62rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--border-soft);
+    border-radius:4px;
+    padding:1px 6px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .subject-pill.active .grade-tag{
+    color:var(--gold);
+    border-color:var(--gold);
+    background:rgba(201,164,92,0.1);
+  }
 
   /* ---------- Weight strip ---------- */
   .weights-row{
@@ -730,12 +749,20 @@
         <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
       </button>
       <button class="subject-pill" data-subject="applied">
-        <span class="name">Applied Subject</span>
+        <span class="name">Applied Subject<span class="grade-tag">Grade 12 only</span></span>
         <span class="weights">WW 35% &middot; PT 40% &middot; Exam 25%</span>
       </button>
       <button class="subject-pill" data-subject="elective">
         <span class="name">Elective Subject</span>
         <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+      </button>
+      <button class="subject-pill" data-subject="academicSpecialized">
+        <span class="name">Academic Specialized<span class="grade-tag">Grade 12 only</span></span>
+        <span class="weights">WW 25% &middot; PT 45% &middot; Exam 30%</span>
+      </button>
+      <button class="subject-pill" data-subject="tvlSpecialized">
+        <span class="name">TVL Specialized<span class="grade-tag">Grade 12 only</span></span>
+        <span class="weights">WW 20% &middot; PT 60% &middot; Exam 20%</span>
       </button>
     </div>
   </div>
@@ -875,14 +902,16 @@ const JHS_PRESETS = {
   groupB: {ww:20, pt:60, ex:20},
 };
 const SHS_PRESETS = {
-  core:     {ww:20, pt:50, ex:30},
-  applied:  {ww:35, pt:40, ex:25},
-  elective: {ww:20, pt:50, ex:30},
+  core:                {ww:20, pt:50, ex:30},
+  applied:             {ww:35, pt:40, ex:25},
+  elective:            {ww:20, pt:50, ex:30},
+  academicSpecialized: {ww:25, pt:45, ex:30},
+  tvlSpecialized:      {ww:20, pt:60, ex:20},
 };
 
 let currentLevel = 'shs';       // 'jhs' | 'shs'
 let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
-let currentShsType = 'core';    // 'core' | 'applied' | 'elective'
+let currentShsType = 'core';    // 'core' | 'applied' | 'elective' | 'academicSpecialized' | 'tvlSpecialized'
 
 // ---------- Custom GA4 event tracking ----------
 // Base gtag snippet only sends automatic page_view / GA4 default events.
