@@ -199,6 +199,70 @@
     border-color:var(--gold);
     background:rgba(201,164,92,0.1);
   }
+  .compute-btn{
+    display:block;
+    width:100%;
+    margin-top:20px;
+    padding:14px 20px;
+    background:linear-gradient(90deg, var(--gold), var(--gold-soft));
+    color:#0a1420;
+    border:none;
+    border-radius:10px;
+    font-family:'Spectral',serif;
+    font-weight:600;
+    font-size:1.05rem;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .compute-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 6px 18px rgba(201,164,92,0.3);
+  }
+  .compute-btn:active{ transform:translateY(0); }
+  .check-another-btn{
+    display:none;
+    width:100%;
+    margin-top:14px;
+    padding:10px 16px;
+    background:transparent;
+    color:var(--text-soft);
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    font-size:0.9rem;
+    cursor:pointer;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .check-another-btn:hover{
+    border-color:var(--gold);
+    color:var(--gold-soft);
+  }
+  .check-another-btn.visible{ display:block; }
+  .subject-select-dropdown, .subject-text-input{
+    width:100%;
+    padding:12px 14px;
+    background:var(--surface-2);
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.92rem;
+  }
+  .subject-select-dropdown:focus, .subject-text-input:focus{
+    outline:none;
+    border-color:var(--gold);
+  }
+  .track-hint{
+    margin-top:8px;
+    font-size:0.8rem;
+    color:var(--text-faint);
+    line-height:1.4;
+  }
+  .track-hint a{
+    color:var(--gold-soft);
+    text-decoration:underline;
+    cursor:pointer;
+  }
 
   /* ---------- Weight strip ---------- */
   .weights-row{
@@ -742,32 +806,76 @@
   </div>
 
   <div class="subject-select level-panel" id="shs-select">
-    <div class="label">Subject Type</div>
-    <div class="subject-pills" id="subject-pills">
-      <button class="subject-pill" data-subject="core">
-        <span class="name">Core Subject</span>
-        <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+
+    <div class="label">How do you want to find your subject's weights?</div>
+    <div class="subject-pills" id="mode-pills">
+      <button class="subject-pill" data-mode="byName">
+        <span class="name">I know my subject name</span>
+        <span class="weights">e.g. "General Mathematics" or "Business Finance"</span>
       </button>
-      <button class="subject-pill" data-subject="applied">
-        <span class="name">Applied Subject<span class="grade-tag">Grade 12 only</span></span>
-        <span class="weights">WW 35% &middot; PT 40% &middot; Exam 25%</span>
+      <button class="subject-pill" data-mode="manual">
+        <span class="name">I'll pick the type myself</span>
+        <span class="weights">Core / Applied / Specialized / Elective</span>
       </button>
-      <button class="subject-pill" data-subject="elective">
-        <span class="name">Academic Elective Subject</span>
-        <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
-      </button>
-      <button class="subject-pill" data-subject="academicSpecialized">
-        <span class="name">Academic Specialized<span class="grade-tag">Grade 12 only</span></span>
-        <span class="weights">WW 25% &middot; PT 45% &middot; Exam 30%</span>
-      </button>
-      <button class="subject-pill" data-subject="tvlSpecialized">
-        <span class="name">TVL Specialized<span class="grade-tag">Grade 12 only</span></span>
-        <span class="weights">WW 20% &middot; PT 60% &middot; Exam 20%</span>
-      </button>
-      <button class="subject-pill" data-subject="techProElective">
-        <span class="name">TechPro Electives</span>
-        <span class="weights">WW 15% &middot; PT 65% &middot; Exam 20%</span>
-      </button>
+    </div>
+
+    <div id="byname-panel" style="margin-top:16px;">
+      <div class="label">Track</div>
+      <div class="subject-pills" id="track-pills">
+        <button class="subject-pill" data-track="academic">
+          <span class="name">Academic Track</span>
+          <span class="weights">STEM &middot; ABM &middot; HUMSS &middot; GAS</span>
+        </button>
+        <button class="subject-pill" data-track="tvl">
+          <span class="name">TVL Track</span>
+          <span class="weights">Any specialization</span>
+        </button>
+      </div>
+
+      <div id="academic-subject-panel" style="margin-top:14px; display:none;">
+        <div class="label">Your Subject</div>
+        <select id="academic-subject-select" class="subject-select-dropdown"></select>
+        <div class="track-hint">
+          Don't see your subject on the list? It's probably a Grade 12 elective or a subject from the new Grade 11 curriculum —
+          <a href="#" id="academic-manual-link">select the type manually instead</a>.
+        </div>
+      </div>
+
+      <div id="tvl-subject-panel" style="margin-top:14px; display:none;">
+        <div class="label">Your TVL Specialized Subject</div>
+        <input type="text" id="tvl-subject-input" class="subject-text-input" placeholder="e.g., Cookery NC II, Computer Systems Servicing NC II">
+        <div class="track-hint">All TVL Specialized subjects use the same weights (WW 20% &middot; PT 60% &middot; Exam 20%), so any specialization works here.</div>
+      </div>
+    </div>
+
+    <div id="manual-panel" style="margin-top:16px; display:none;">
+      <div class="label">Subject Type</div>
+      <div class="subject-pills" id="subject-pills">
+        <button class="subject-pill" data-subject="core">
+          <span class="name">Core Subject</span>
+          <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+        </button>
+        <button class="subject-pill" data-subject="applied">
+          <span class="name">Applied Subject<span class="grade-tag">Grade 12 only</span></span>
+          <span class="weights">WW 35% &middot; PT 40% &middot; Exam 25%</span>
+        </button>
+        <button class="subject-pill" data-subject="elective">
+          <span class="name">Academic Elective Subject</span>
+          <span class="weights">WW 20% &middot; PT 50% &middot; Exam 30%</span>
+        </button>
+        <button class="subject-pill" data-subject="academicSpecialized">
+          <span class="name">Academic Specialized<span class="grade-tag">Grade 12 only</span></span>
+          <span class="weights">WW 25% &middot; PT 45% &middot; Exam 30%</span>
+        </button>
+        <button class="subject-pill" data-subject="tvlSpecialized">
+          <span class="name">TVL Specialized<span class="grade-tag">Grade 12 only</span></span>
+          <span class="weights">WW 20% &middot; PT 60% &middot; Exam 20%</span>
+        </button>
+        <button class="subject-pill" data-subject="techProElective">
+          <span class="name">TechPro Electives</span>
+          <span class="weights">WW 15% &middot; PT 65% &middot; Exam 20%</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -815,6 +923,8 @@
           </div>
         </div>
       </details>
+
+      <button id="compute-btn" class="compute-btn" type="button">Compute My Grade</button>
     </div>
 
     <div class="result-col">
@@ -840,6 +950,8 @@
         <h3>How to raise this grade</h3>
         <ul id="suggestion-list"></ul>
       </div>
+
+      <button id="check-another-btn" class="check-another-btn" type="button">Check my grade on another subject →</button>
     </div>
   </div>
 
@@ -914,9 +1026,87 @@ const SHS_PRESETS = {
   techProElective:     {ww:15, pt:65, ex:20},
 };
 
+// Subject-name lookup for the Academic Track (STEM / ABM / HUMSS / GAS), compiled
+// from publicly published DepEd SHS curriculum guides. Every Specialized subject
+// across all four strands shares the same weight preset ('academicSpecialized'),
+// so strand-of-origin doesn't need to be tracked separately here — the student
+// only needs to find their subject's name in the combined list.
+//
+// NOTE: this list is not exhaustive, and was compiled from public sources rather
+// than an official DepEd curriculum guide. If a subject is missing or mislabeled,
+// the "select the type manually instead" link is the safe fallback. Grade 12
+// elective subjects and the new Grade 11 Strengthened SHS curriculum (SY 2026-27
+// onward) are intentionally NOT included here yet, since their subject-level
+// lists aren't reliably published as of this tool's last update — those should
+// use manual selection too.
+const ACADEMIC_SUBJECTS = [
+  // ---- Core Subjects ----
+  {name:'Oral Communication', type:'core'},
+  {name:'Reading and Writing', type:'core'},
+  {name:'21st Century Literature from the Philippines and the World', type:'core'},
+  {name:'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino', type:'core'},
+  {name:'Contemporary Philippine Arts from the Regions', type:'core'},
+  {name:'Media and Information Literacy', type:'core'},
+  {name:'General Mathematics', type:'core'},
+  {name:'Statistics and Probability', type:'core'},
+  {name:'Earth and Life Science', type:'core'},
+  {name:'Physical Science', type:'core'},
+  {name:'Introduction to the Philosophy of the Human Person', type:'core'},
+  {name:'Physical Education and Health', type:'core'},
+  {name:'Personal Development / Pansariling Kaunlaran', type:'core'},
+  {name:'Understanding Culture, Society, and Politics', type:'core'},
+
+  // ---- Applied Subjects ----
+  {name:'English for Academic and Professional Purposes', type:'applied'},
+  {name:'Practical Research 1', type:'applied'},
+  {name:'Practical Research 2', type:'applied'},
+  {name:'Filipino sa Piling Larang', type:'applied'},
+  {name:'Empowerment Technologies', type:'applied'},
+  {name:'Entrepreneurship', type:'applied'},
+  {name:'Inquiries, Investigations, and Immersion', type:'applied'},
+  {name:'Disaster Readiness and Risk Reduction', type:'applied'},
+
+  // ---- Specialized Subjects: STEM ----
+  {name:'Pre-Calculus', type:'academicSpecialized'},
+  {name:'Basic Calculus', type:'academicSpecialized'},
+  {name:'General Biology 1', type:'academicSpecialized'},
+  {name:'General Biology 2', type:'academicSpecialized'},
+  {name:'General Chemistry 1', type:'academicSpecialized'},
+  {name:'General Chemistry 2', type:'academicSpecialized'},
+  {name:'General Physics 1', type:'academicSpecialized'},
+  {name:'General Physics 2', type:'academicSpecialized'},
+
+  // ---- Specialized Subjects: ABM ----
+  {name:'Applied Economics', type:'academicSpecialized'},
+  {name:'Business Ethics and Social Responsibility', type:'academicSpecialized'},
+  {name:'Fundamentals of Accountancy, Business and Management 1', type:'academicSpecialized'},
+  {name:'Fundamentals of Accountancy, Business and Management 2', type:'academicSpecialized'},
+  {name:'Business Finance', type:'academicSpecialized'},
+  {name:'Organization and Management', type:'academicSpecialized'},
+  {name:'Principles of Marketing', type:'academicSpecialized'},
+
+  // ---- Specialized Subjects: HUMSS ----
+  {name:'Creative Writing', type:'academicSpecialized'},
+  {name:'Creative Nonfiction', type:'academicSpecialized'},
+  {name:'Disciplines and Ideas in the Social Sciences', type:'academicSpecialized'},
+  {name:'Disciplines and Ideas in the Applied Social Sciences', type:'academicSpecialized'},
+  {name:'Philippine Politics and Governance', type:'academicSpecialized'},
+  {name:'Community Engagement, Solidarity, and Citizenship', type:'academicSpecialized'},
+  {name:'Trends, Networks, and Critical Thinking in the 21st Century Culture', type:'academicSpecialized'},
+  {name:'World Religions and Belief Systems', type:'academicSpecialized'},
+
+  // ---- Specialized Subjects: GAS ----
+  {name:'Humanities 1', type:'academicSpecialized'},
+  {name:'Humanities 2', type:'academicSpecialized'},
+  {name:'Social Science 1', type:'academicSpecialized'},
+  {name:'Social Science 2', type:'academicSpecialized'},
+].sort((a,b) => a.name.localeCompare(b.name));
+
 let currentLevel = 'shs';       // 'jhs' | 'shs'
 let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
 let currentShsType = 'core';    // 'core' | 'applied' | 'elective' | 'academicSpecialized' | 'tvlSpecialized' | 'techProElective'
+let subjectSelectMode = 'byName'; // 'byName' | 'manual'
+let currentTrack = 'academic';    // 'academic' | 'tvl'
 
 // ---------- Custom GA4 event tracking ----------
 // Base gtag snippet only sends automatic page_view / GA4 default events.
@@ -929,14 +1119,7 @@ function trackEvent(name, params = {}) {
   }
 }
 
-let firstGradeTracked = false;   // fires once per session
-let gradeDebounceTimer = null;   // avoids firing an event on every keystroke
-function trackGradeComputed(payload) {
-  clearTimeout(gradeDebounceTimer);
-  gradeDebounceTimer = setTimeout(() => {
-    trackEvent('grade_computed', payload);
-  }, 1200); // waits until the user pauses typing for ~1.2s
-}
+let firstGradeTracked = false;   // fires once per session, on first successful button-triggered computation
 
 // ---------- Student research survey banner ----------
 // TODO: replace this placeholder with your actual Google Form URL
@@ -1237,6 +1420,26 @@ function applyWeights(){
     p.classList.toggle('active', p.dataset.subject === currentShsType);
   });
 
+  document.querySelectorAll('#mode-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.mode === subjectSelectMode);
+  });
+  document.getElementById('byname-panel').style.display = subjectSelectMode === 'byName' ? 'block' : 'none';
+  document.getElementById('manual-panel').style.display = subjectSelectMode === 'manual' ? 'block' : 'none';
+
+  document.querySelectorAll('#track-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.track === currentTrack);
+  });
+  document.getElementById('academic-subject-panel').style.display =
+    (subjectSelectMode === 'byName' && currentTrack === 'academic') ? 'block' : 'none';
+  document.getElementById('tvl-subject-panel').style.display =
+    (subjectSelectMode === 'byName' && currentTrack === 'tvl') ? 'block' : 'none';
+
+  // Previous result (if any) was computed under the old weights — clear it
+  // so the student presses Compute My Grade again for the new configuration.
+  if (typeof resetResultPlaceholder === 'function') {
+    resetResultPlaceholder();
+  }
+
   renderAll();
 }
 
@@ -1262,7 +1465,98 @@ document.querySelectorAll('#subject-pills .subject-pill').forEach(btn=>{
   });
 });
 
+// ---------- Subject-name-based selection (Academic Track & TVL) ----------
+const academicSelect = document.getElementById('academic-subject-select');
+if (academicSelect) {
+  const typeLabels = {
+    core: 'Core',
+    applied: 'Applied',
+    academicSpecialized: 'Specialized',
+  };
+  const groups = { core: [], applied: [], academicSpecialized: [] };
+  ACADEMIC_SUBJECTS.forEach(s => groups[s.type].push(s));
+
+  Object.keys(groups).forEach(type => {
+    if (!groups[type].length) return;
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = typeLabels[type] + ' Subjects';
+    groups[type].forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.type;
+      opt.textContent = s.name;
+      opt.dataset.subjectName = s.name;
+      optgroup.appendChild(opt);
+    });
+    academicSelect.appendChild(optgroup);
+  });
+
+  academicSelect.addEventListener('change', (e) => {
+    const opt = e.target.selectedOptions[0];
+    currentShsType = opt.value;
+    trackEvent('select_subject_by_name', {
+      subject_name: opt.dataset.subjectName,
+      resolved_type: currentShsType,
+      track: 'academic',
+    });
+    applyWeights();
+  });
+}
+
+document.querySelectorAll('#mode-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    subjectSelectMode = btn.dataset.mode;
+    trackEvent('select_subject_mode', {mode: subjectSelectMode});
+    applyWeights();
+  });
+});
+
+document.querySelectorAll('#track-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentTrack = btn.dataset.track;
+    trackEvent('select_shs_track', {track: currentTrack});
+    if (currentTrack === 'academic' && academicSelect && academicSelect.value) {
+      currentShsType = academicSelect.value;
+    } else if (currentTrack === 'tvl') {
+      currentShsType = 'tvlSpecialized';
+    }
+    applyWeights();
+  });
+});
+
+const tvlInput = document.getElementById('tvl-subject-input');
+if (tvlInput) {
+  tvlInput.addEventListener('input', () => {
+    currentShsType = 'tvlSpecialized'; // fixed weight regardless of the specific TVL subject typed
+    applyWeights();
+  });
+  tvlInput.addEventListener('blur', () => {
+    if (tvlInput.value.trim()) {
+      trackEvent('enter_tvl_subject_name', {subject_name: tvlInput.value.trim()});
+    }
+  });
+}
+
+const academicManualLink = document.getElementById('academic-manual-link');
+if (academicManualLink) {
+  academicManualLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    subjectSelectMode = 'manual';
+    trackEvent('select_subject_mode', {mode: 'manual', source: 'academic_fallback_link'});
+    applyWeights();
+  });
+}
+
+// Called live on every keystroke — only refreshes each component's own
+// Percentage Score display. Does NOT touch the Term Grade / breakdown /
+// suggestions, since generating the final grade now requires pressing
+// the "Compute My Grade" button (see computeGrade below).
 function renderAll(){
+  updateComponentDisplays();
+}
+
+let hasComputedOnce = false;
+
+function computeGrade(){
   updateComponentDisplays();
 
   const weights = getWeights();
@@ -1288,7 +1582,7 @@ function renderAll(){
     pill.textContent = d.label;
     pill.className = 'descriptor ' + d.cls;
   } else {
-    pill.textContent = 'Enter scores';
+    pill.textContent = 'Enter at least one score';
     pill.className = 'descriptor';
   }
 
@@ -1300,11 +1594,16 @@ function renderAll(){
     <div class="line"><span class="l">Exams</span><span class="v">${isFinite(psEX)?psEX.toFixed(2):'0.00'}% &times; ${weights.ex}%</span></div>
     <div class="line"><span class="l"></span><span class="v">= ${wsEX.toFixed(2)}</span></div>
     <div class="final"><span class="l">Initial Grade</span><span class="v">${ig.toFixed(2)}</span></div>
-  ` : `<div style="color:var(--text-faint);">Fill in at least one score to see the computed grade.</div>`;
+  ` : `<div style="color:var(--text-faint);">Please enter at least one score above, then press Compute My Grade again.</div>`;
 
   renderSuggestions(anyData, {psWW, psPT, psEX, wsWW, wsPT, wsEX, ig, tg, weights});
 
+  const checkAnotherBtn = document.getElementById('check-another-btn');
+
   if (anyData) {
+    hasComputedOnce = true;
+    if (checkAnotherBtn) checkAnotherBtn.classList.add('visible');
+
     if (!firstGradeTracked) {
       firstGradeTracked = true;
       trackEvent('first_grade_computed', {
@@ -1313,7 +1612,7 @@ function renderAll(){
       });
       maybeShowSurveyBanner();
     }
-    trackGradeComputed({
+    trackEvent('grade_computed', {
       term_grade: Math.round(tg),
       descriptor: descriptorFor(tg).label,
       level: currentLevel,
@@ -1321,6 +1620,41 @@ function renderAll(){
       table_mode: document.getElementById('table-mode').value,
     });
   }
+}
+
+function resetResultPlaceholder(){
+  document.getElementById('tg-num').textContent = '—';
+  const pill = document.getElementById('descriptor-pill');
+  pill.textContent = 'Not yet computed';
+  pill.className = 'descriptor';
+  document.getElementById('breakdown').innerHTML =
+    '<div style="color:var(--text-faint);">Fill in your scores, then press <b>Compute My Grade</b> to see your result.</div>';
+  document.getElementById('suggestion-list').innerHTML =
+    '<li>Add scores on the left, then press Compute My Grade.</li>';
+  const checkAnotherBtn = document.getElementById('check-another-btn');
+  if (checkAnotherBtn) checkAnotherBtn.classList.remove('visible');
+}
+
+// Clears every score/total field so the student can look up a different
+// subject's grade without reloading the page. Does not change the
+// selected School Level / Subject Type — only the entered numbers.
+function resetForAnotherSubject(){
+  trackEvent('check_another_subject_clicked', {});
+
+  state.ww.forEach(row => { row.score = ''; row.total = ''; });
+  state.pt.forEach(row => { row.score = ''; row.total = ''; });
+  state.ex.st1.score = ''; state.ex.st1.total = '';
+  state.ex.st2.score = ''; state.ex.st2.total = '';
+  state.ex.te.score  = ''; state.ex.te.total  = '';
+
+  buildComponents();      // rebuilds inputs with the now-empty state
+  updateComponentDisplays();
+  resetResultPlaceholder();
+  hasComputedOnce = false;
+
+  const firstInput = componentsEl.querySelector('input');
+  if (firstInput) firstInput.focus();
+  window.scrollTo({ top: componentsEl.offsetTop - 20, behavior: 'smooth' });
 }
 
 function renderSuggestions(anyData, d){
@@ -1341,13 +1675,18 @@ function renderSuggestions(anyData, d){
   ].filter(c=>isFinite(c.ps));
 
   if(comps.length){
+    const strongest = comps.reduce((a,b)=> a.ps >= b.ps ? a : b);
     const weakest = comps.reduce((a,b)=> a.ps <= b.ps ? a : b);
     const leverage = comps.map(c=>({...c, room:(100-c.ps)*(c.weight/100)}))
                           .reduce((a,b)=> a.room >= b.room ? a : b);
 
-    tips.push(`Your <b>${leverage.name}</b> score has the most room to lift your grade — it's worth ${leverage.weight}% of the term and currently sits at ${leverage.ps.toFixed(1)}%. Even a small improvement here moves the needle most.`);
+    tips.push(`👍 Nice work on <b>${strongest.name}</b> — you're scoring ${strongest.ps.toFixed(1)}% there, your strongest area this term. Keep that consistency up.`);
 
-    if(weakest.key !== leverage.key){
+    if(comps.length > 1){
+      tips.push(`Your <b>${leverage.name}</b> score has the most room to lift your grade — it's worth ${leverage.weight}% of the term and currently sits at ${leverage.ps.toFixed(1)}%. Even a small improvement here moves the needle most.`);
+    }
+
+    if(weakest.key !== leverage.key && weakest.key !== strongest.key){
       tips.push(`<b>${weakest.name}</b> is your lowest-scoring area at ${weakest.ps.toFixed(1)}%. Ask your teacher which specific items or competencies were missed so you can target practice there.`);
     }
   }
@@ -1370,11 +1709,18 @@ function renderSuggestions(anyData, d){
 
 document.getElementById('table-mode').addEventListener('change', (e)=>{
   trackEvent('change_transmutation_table', {table_mode: e.target.value});
-  renderAll();
+  if (hasComputedOnce) {
+    // a grade was already shown — re-run so the switched table is reflected immediately
+    computeGrade();
+  }
 });
+
+document.getElementById('compute-btn').addEventListener('click', computeGrade);
+document.getElementById('check-another-btn').addEventListener('click', resetForAnotherSubject);
 
 buildComponents();
 applyWeights();
+resetResultPlaceholder();
 </script>
 <div id="survey-banner" class="survey-banner">
   <div class="survey-banner-text">
