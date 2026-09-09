@@ -807,7 +807,19 @@
 
   <div class="subject-select level-panel" id="shs-select">
 
-    <div class="label">How do you want to find your subject's weights?</div>
+    <div class="label">Grade Level</div>
+    <div class="subject-pills" id="grade-pills">
+      <button class="subject-pill" data-grade="g11">
+        <span class="name">Grade 11</span>
+        <span class="weights">Strengthened Senior High School Curriculum</span>
+      </button>
+      <button class="subject-pill" data-grade="g12">
+        <span class="name">Grade 12</span>
+        <span class="weights">Senior High School Curriculum</span>
+      </button>
+    </div>
+
+    <div class="label" style="margin-top:16px;">How do you want to find your subject's weights?</div>
     <div class="subject-pills" id="mode-pills">
       <button class="subject-pill" data-mode="byName">
         <span class="name">I know my subject name</span>
@@ -1105,6 +1117,7 @@ const ACADEMIC_SUBJECTS = [
 let currentLevel = 'shs';       // 'jhs' | 'shs'
 let currentJhsGroup = 'groupA'; // 'groupA' | 'groupB'
 let currentShsType = 'core';    // 'core' | 'applied' | 'elective' | 'academicSpecialized' | 'tvlSpecialized' | 'techProElective'
+let currentShsGrade = 'g11';    // 'g11' | 'g12' — Grade 12 uses Term Exam only for the Exams component
 let subjectSelectMode = 'byName'; // 'byName' | 'manual'
 let currentTrack = 'academic';    // 'academic' | 'tvl'
 
@@ -1242,29 +1255,50 @@ function buildComponents(){
     card.dataset.key = key;
 
     if(key === 'ex'){
+      // Grade 12 (SY 2026-2027 guidance): Exams = Term Exam only.
+      const isG12Exam = currentLevel === 'shs' && currentShsGrade === 'g12';
+      const examSubs = isG12Exam ? ['te'] : ['st1', 'st2', 'te'];
+
+      const headSub = isG12Exam
+        ? 'Term Exam only (100%) — Grade 12'
+        : 'Summative Test 1 (30%) + Summative Test 2 (30%) + Term Exam (40%)';
+
+      const subWeightsHtml = isG12Exam ? `
+        <div class="sub-weight-field">
+          <label>TE weight</label>
+          <div class="locked-value">100%</div>
+        </div>
+      ` : `
+        <div class="sub-weight-field">
+          <label>ST1 weight</label>
+          <div class="locked-value">${examSubWeights.st1}%</div>
+        </div>
+        <div class="sub-weight-field">
+          <label>ST2 weight</label>
+          <div class="locked-value">${examSubWeights.st2}%</div>
+        </div>
+        <div class="sub-weight-field">
+          <label>TE weight</label>
+          <div class="locked-value">${examSubWeights.te}%</div>
+        </div>
+      `;
+
+      const subNote = isG12Exam
+        ? 'Grade 12: the Exams component is based on the Term Exam only.'
+        : 'Fixed per DepEd Order No. 15, s. 2026 — applies to all subject types';
+
       card.innerHTML = `
         <div class="component-head">
-          <div class="name">${meta.title}<small>${meta.sub}</small></div>
+          <div class="name">${meta.title}<small>${headSub}</small></div>
           <div class="ps-out">
             <div class="big" data-out="ps">0.00<span style="font-size:0.85rem;">%</span></div>
             <div class="lbl">Percentage Score</div>
           </div>
         </div>
         <div class="sub-weights sub-weights-locked">
-          <div class="sub-weight-field">
-            <label>ST1 weight</label>
-            <div class="locked-value">${examSubWeights.st1}%</div>
-          </div>
-          <div class="sub-weight-field">
-            <label>ST2 weight</label>
-            <div class="locked-value">${examSubWeights.st2}%</div>
-          </div>
-          <div class="sub-weight-field">
-            <label>TE weight</label>
-            <div class="locked-value">${examSubWeights.te}%</div>
-          </div>
+          ${subWeightsHtml}
         </div>
-        <div class="sub-weight-note">Fixed per DepEd Order No. 15, s. 2026 — applies to all subject types</div>
+        <div class="sub-weight-note">${subNote}</div>
         <div class="items" data-key="ex"></div>
         <div class="add-row">
           <div class="totals-mini" data-out="totals">Enter each sub-test's raw score and total items</div>
@@ -1273,7 +1307,7 @@ function buildComponents(){
       componentsEl.appendChild(card);
 
       const itemsEl = card.querySelector('.items');
-      ['st1','st2','te'].forEach(sub=>{
+      examSubs.forEach(sub=>{
         const row = state.ex[sub];
         const r = document.createElement('div');
         r.className = 'item-row';
@@ -1380,12 +1414,19 @@ function computePS(key){
 // Exam not given), its weight is prorated across whichever sub-tests DO have
 // scores, so the grade still computes sensibly mid-term.
 function computeExamPS(){
-  const parts = ['st1','st2','te'].map(sub=>{
+  // Grade 12 (SY 2026-2027 guidance): the Exams component is based on the
+  // Term Exam only — the ST1/ST2 30/30/40 split only applies to Grade 11
+  // (and JHS, which is unaffected by this Grade 12-specific change).
+  const isG12Exam = currentLevel === 'shs' && currentShsGrade === 'g12';
+  const subs = isG12Exam ? ['te'] : ['st1', 'st2', 'te'];
+  const weights = isG12Exam ? {te: 100} : examSubWeights;
+
+  const parts = subs.map(sub=>{
     const row = state.ex[sub];
     const s = parseFloat(row.score);
     const t = parseFloat(row.total);
     const ps = (!isNaN(s) && !isNaN(t) && t > 0) ? (s/t)*100 : NaN;
-    return {sub, ps, weight: examSubWeights[sub], meta: examSubMeta[sub]};
+    return {sub, ps, weight: weights[sub], meta: examSubMeta[sub]};
   });
 
   const available = parts.filter(p => isFinite(p.ps));
@@ -1425,6 +1466,10 @@ function applyWeights(){
     p.classList.toggle('active', p.dataset.subject === currentShsType);
   });
 
+  document.querySelectorAll('#grade-pills .subject-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.grade === currentShsGrade);
+  });
+
   document.querySelectorAll('#mode-pills .subject-pill').forEach(p=>{
     p.classList.toggle('active', p.dataset.mode === subjectSelectMode);
   });
@@ -1452,6 +1497,7 @@ document.querySelectorAll('#level-pills .subject-pill').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     currentLevel = btn.dataset.level;
     trackEvent('select_school_level', {level: currentLevel});
+    buildComponents(); // exam layout depends on level (+ SHS grade), so rebuild inputs
     applyWeights();
   });
 });
@@ -1466,6 +1512,15 @@ document.querySelectorAll('#subject-pills .subject-pill').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     currentShsType = btn.dataset.subject;
     trackEvent('select_subject_type', {subject_type: currentShsType});
+    applyWeights();
+  });
+});
+
+document.querySelectorAll('#grade-pills .subject-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentShsGrade = btn.dataset.grade;
+    trackEvent('select_shs_grade', {grade: currentShsGrade});
+    buildComponents(); // exam layout differs (Term Exam only vs ST1/ST2/TE), so rebuild inputs
     applyWeights();
   });
 });
